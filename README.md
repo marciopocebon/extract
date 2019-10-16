@@ -53,7 +53,7 @@ License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
 # Reporting bugs
 <https://github.com/terroo/extract/issues>
 
-# Instalation
+# Uninstalation
 ```sh
 git clone https://github.com/terroo/extract
 cd extract
