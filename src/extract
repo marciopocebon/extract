@@ -1,0 +1,121 @@
+#!/bin/sh
+# extract 1.1 - Marcos Oliveira <contato@terminalroot.com.br>
+# Copyright © 2018 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>
+
+VERSION="extract 1.1 - Marcos Oliveira <https://github.com/terroo/extract/issues>"
+
+function usage {
+  cat <<EOF
+usage: ${0##*/} [options] file
+  
+  Options:
+    -h,--help     Show this help
+    --version     Print version and exit
+    -v,--verbose  Decompress verbose mode
+    -l,--list     Lists commands to compress and uncompress
+
+* If the decompressor is not installed, there will be output: 'command not found'.
+** To resolve, install the appropriate software.
+*** extract 1.1 - Marcos Oliveira <contato@terminalroot.com.br>
+EOF
+exit 0
+}
+
+function extract {
+    #echo "$1 $2" && exit 0
+    [ -z "$1" ] && printf "%s\n" "Enter the file." && exit 1
+    [ ! -f "$1" ] && printf "%s\n" "File '$1' does not exist." && exit 1
+
+    # 'v' is optional
+    case "$1" in
+        *.tar.bz2)   tar x${2}jf "$1" ;; # compress: tar cvjf file file.tar.bz2
+        *.tar.gz)    tar x${2}zf "$1" ;; # compress: tar cvzf file file.tar.gz
+        *.tar.xz)    tar x${2}Jf "$1" ;; # compress: tar cvJf file file.tar.bz2
+        *.lzma)      unlzma ${2:+-v} "$1" ;; # compress: unlzma -z file
+        *.bz2)       bunzip2 "$1" ;; # compress: bzip2 -z file
+        *.rar)       rar x "$1" ;; # compress: rar a file.rar file
+        *.gz)        gunzip ${2:+-v} "$1" ;; # compress: gzip -v file
+        *.tar)       tar x${2}f "$1" ;; # compress: tar cvf file
+        *.tbz2)      tar x${2}jf "$1" ;; # compress: tar jcvf file.tbz2 file
+        *.tgz)       tar x${2}zf "$1" ;; # compress: tar zcvf file.tgz file
+        *.zip)       unzip "$1" ;; # compress: zip file
+        *.Z)         uncompress "$1" ;; # compress: compress file
+        *.7z)        7z e "$1" ;; # compress: 7z a file.7z file
+        *.xz)        unxz ${2:+-v} "$1" || xz -dv "$1" ;; # compress: xz file
+        *.exe)       cabextract "$1" ;; # compress: windows
+        *.deb)       ar ${2}x "$1" || dpkg-deb -xv "$1";; # compress: dpkg-deb -b custom-dir/ file.deb
+        *.rpm)       tar x${2}f "$1" || rpm2cpio "$1" | cpio -idmv;; # comprimir rpmbuild -ba file-custom.spec
+        *)           echo "Unknown extension." ;;
+    esac
+    exit 0		
+}
+
+function list {
+  cat <<EOF
+┌─────────┬────────────────────────────┬────────────────────┐
+│   MIME  │           COMPRESS         │     UNCOMPRESS     │
+├─────────┼────────────────────────────┼────────────────────┤
+│ tar.bz2 │ tar cvjf file file.tar.bz2 │ tar xjf file       │
+├─────────┼────────────────────────────┼────────────────────┤
+│ tar.gz  │ tar cvzf file file.tar.gz  │ tar xzf file       │
+├─────────┼────────────────────────────┼────────────────────┤
+│ tar.xz  │ tar xJf file.tar.xz        │ tar xJf file       │
+├─────────┼────────────────────────────┼────────────────────┤
+│ lzma    │ unlzma  file               │ unlzma -z file     │
+├─────────┼────────────────────────────┼────────────────────┤
+│ bz2     │ bunzip2 file               │ bunzip2 -z file    │
+├─────────┼────────────────────────────┼────────────────────┤
+│ rar     │ rar x file                 │ rar a files        │
+├─────────┼────────────────────────────┼────────────────────┤
+│ gz      │ gunzip file                │ gzip -v file       │
+├─────────┼────────────────────────────┼────────────────────┤
+│ tar     │ tar xf file                │ tar cf file        │
+├─────────┼────────────────────────────┼────────────────────┤
+│ tbz2    │ tar jcvf file.tbz2 file    │ tar xjf file       │
+├─────────┼────────────────────────────┼────────────────────┤
+│ tgz     │ tar zcvf file.tgz file     │ tar xzf file       │
+├─────────┼────────────────────────────┼────────────────────┤
+│ zip     │ zip file                   │ unzip file         │
+├─────────┼────────────────────────────┼────────────────────┤
+│ Z       │ compress file              │ uncompress file.Z  │
+├─────────┼────────────────────────────┼────────────────────┤
+│ 7z      │ 7z a file.7z file          │ 7z e file          │
+├─────────┼────────────────────────────┼────────────────────┤
+│ xz      │ xz file                    │ xz -d file || unxz │
+├─────────┼────────────────────────────┼────────────────────┤
+│ deb     │dpkg-deb -b dir/ file.deb   │ ar vx file         │
+├─────────┼────────────────────────────┼────────────────────┤
+│ rpm     │ rpmbuild -ba file.spec     │ tar xvf file       │
+├─────────┴────────────────────────────┴────────────────────┤
+│    extract 1.1 - Marcos Oliveira - terminalroot.com.br    │
+└───────────────────────────────────────────────────────────┘
+EOF
+exit 0
+}
+
+while [ "$1" ] ; do
+    case "$1" in
+        -h|--help) usage ;;
+        --version) printf "%s\n" "$VERSION" && exit 0;;
+        -v|--verbose) extract "$2" 'v' ;;
+        -l|--list) list ;;
+        *) extract "$1";;
+    esac
+    shift
+done
